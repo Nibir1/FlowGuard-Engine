@@ -1,0 +1,60 @@
+services:
+  # ----------------------------------------
+  # Backend Service: FastAPI + LangGraph
+  # ----------------------------------------
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flowguard_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # Hot reload for development
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - QDRANT_HOST=qdrant
+      - ENVIRONMENT=development
+    depends_on:
+      - qdrant
+    networks:
+      - flowguard_network
+
+  # ----------------------------------------
+  # Vector Database: Qdrant
+  # ----------------------------------------
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: flowguard_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - flowguard_network
+
+  # ----------------------------------------
+  # Frontend Service: React + Vite
+  # ----------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: flowguard_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevent host node_modules from overwriting container
+    networks:
+      - flowguard_network
+
+# ----------------------------------------
+# Volumes & Networks
+# ----------------------------------------
+volumes:
+  qdrant_data:
+
+networks:
+  flowguard_network:
+    driver: bridge
