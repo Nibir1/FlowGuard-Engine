@@ -14,10 +14,10 @@ help:
 	@echo "make clean        : Stop system + remove volumes & pycache"
 	@echo "make shell-backend: Open Bash shell inside Backend container"
 	@echo "make test         : Run ALL tests (Backend + Frontend)"
-	@echo "make test-backend : Run only Backend tests"
-	@echo "make test-frontend: Run only Frontend tests (in ephemeral container)"
+	@echo "make test-backend : Run Backend tests with Coverage"
+	@echo "make test-frontend: Run Frontend tests (Vitest)"
 
-# Force rebuild to ensure dependencies (like pypdf/openai) are fresh
+# Force rebuild to ensure dependencies are fresh
 build:
 	docker-compose build --no-cache
 	docker-compose up -d
@@ -28,7 +28,7 @@ build:
 
 up:
 	docker-compose up -d
-	@echo "System running at."
+	@echo "System running at:"
 	@echo "  - Frontend: http://localhost:5173/"
 	@echo "  - Backend:  http://localhost:8000/docs"
 	@echo "  - Qdrant:   http://localhost:6333/dashboard"
@@ -68,22 +68,16 @@ clean:
 
 test: test-backend test-frontend
 
-# Runs pytest inside the running backend container
+# FIX APPLIED: Added '-e PYTHONPATH=/app' so pytest can resolve 'src'
 test-backend:
 	@echo "---------------------------------------"
-	@echo "Running BACKEND tests (Pytest)"
+	@echo "Running BACKEND tests (Pytest + Coverage)"
 	@echo "---------------------------------------"
-	docker-compose exec backend pytest tests/ -v
+	docker-compose exec -e PYTHONPATH=/app backend pytest --cov=src tests/ -v
 
-
-# The 'frontend' service is Nginx (no Node). 
-# We spin up a temporary Node container to run tests against the mounted code.
+# Executes tests inside the running Frontend Dev container
 test-frontend:
 	@echo "---------------------------------------"
 	@echo "Running FRONTEND tests (Vitest)"
 	@echo "---------------------------------------"
-	docker run --rm \
-		-v "$(CURDIR)/frontend:/app" \
-		-w /app \
-		node:22-alpine \
-		/bin/sh -c "npm install && npm test -- --run"
+	docker-compose exec frontend npm test
