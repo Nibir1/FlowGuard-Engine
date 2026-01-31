@@ -22,13 +22,16 @@ build:
 	docker-compose build --no-cache
 	docker-compose up -d
 	@echo "System Rebuilt."
-	@echo "  - Frontend: http://localhost:3000"
+	@echo "  - Frontend: http://localhost:5173/"
 	@echo "  - Backend:  http://localhost:8000/docs"
 	@echo "  - Qdrant:   http://localhost:6333/dashboard"
 
 up:
 	docker-compose up -d
-	@echo "Application running at http://localhost:3000"
+	@echo "System running at."
+	@echo "  - Frontend: http://localhost:5173/"
+	@echo "  - Backend:  http://localhost:8000/docs"
+	@echo "  - Qdrant:   http://localhost:6333/dashboard"
 
 down:
 	docker-compose down

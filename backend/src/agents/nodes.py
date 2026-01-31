@@ -61,8 +61,10 @@ def diagnose_node(state: AgentState) -> AgentState:
         CRITICAL INSTRUCTION: Your previous attempt failed validation.
         ERROR: {state['validation_error']}
         
-        Reflect on this error. ensure 'recommended_actions' is a LIST OF OBJECTS with 'instruction', 'action_type', and 'estimated_time_minutes'.
-        Do NOT return simple strings for actions.
+        Reflect on this error. Ensure you provide ALL required fields:
+        - severity_score (int)
+        - recommended_actions (list of objects)
+        - safety_warnings (list of strings)
         """
 
     prompt = f"""
@@ -84,14 +86,26 @@ def diagnose_node(state: AgentState) -> AgentState:
     4. Provide a step-by-step action plan for the technician.
     
     IMPORTANT SCHEMA NOTE:
-    - 'recommended_actions' must be a list of objects.
-    - EACH object must have: 'step_order' (int), 'instruction' (str), 'action_type' (str), and 'estimated_time_minutes' (int).
+    You MUST populate the 'recommended_actions' list.
+    Each action object MUST strictly follow this structure:
+    - 'step_order': integer (1, 2, 3...)
+    - 'instruction': string (Clear action verb)
+    - 'tool_required': string (Optional, e.g., "Multimeter", "Wrench")
+
+    Do NOT invent fields like 'action_type' or 'estimated_time'. 
+    Stick strictly to the schema provided.
     
-    Example:
-    [
-      {{ "step_order": 1, "instruction": "Check door track", "action_type": "inspection", "estimated_time_minutes": 15 }},
-      {{ "step_order": 2, "instruction": "Clean debris", "action_type": "repair", "estimated_time_minutes": 10 }}
-    ]
+    Example JSON Structure (Fill this):
+    {{
+      "fault_summary": "...",
+      "root_cause_hypothesis": "...",
+      "severity_score": 8,
+      "cited_manual_references": ["ManualID..."],
+      "recommended_actions": [
+        {{ "step_order": 1, "instruction": "Lock out power", "tool_required": "Lockout Kit" }}
+      ],
+      "safety_warnings": ["Risk of electric shock"]
+    }}
     """
     
     # Invoke LLM

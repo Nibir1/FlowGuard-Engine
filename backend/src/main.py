@@ -7,6 +7,7 @@ Exposes the LangGraph Agent via a RESTful API.
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from src.routers import admin
 from src.core.config import get_settings
 from src.core.schema import TelemetryReading, DiagnosticResult
 from src.agents.graph import app_graph
@@ -30,6 +31,8 @@ def get_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    application.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 
     return application
 
